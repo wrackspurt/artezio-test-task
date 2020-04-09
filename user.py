@@ -41,6 +41,7 @@ def user():
                 print('\nincorrect IATA! enter IATA codes again.')
                 continue
             current_date = datetime.now().date()
+            latest_date = datetime.strptime('28-10-2020', '%d-%m-%Y').date()
             return_date = ''
             flight_type = int(input('do you plan a round trip (1) or a one way (2)? (1/2): '))
             if flight_type == 1:
@@ -48,14 +49,15 @@ def user():
                                                          '(dd-mm-yyyy): '), '%d-%m-%Y').date()
                 return_date = datetime.strptime(input('enter the date of return ' +
                                                       '(dd-mm-yyyy): '), '%d-%m-%Y').date()
-                if departure_date < current_date or return_date < current_date or \
+                if departure_date < current_date or departure_date >= latest_date or \
+                        return_date < current_date or return_date >= latest_date or \
                         departure_date > return_date:
                     print('\nincorrect date! enter the flight information again.')
                     continue
             elif flight_type == 2:
                 departure_date = datetime.strptime(input('enter the date of departure ' +
                                                          '(dd-mm-yyyy): '), '%d-%m-%Y').date()
-                if departure_date < current_date:
+                if departure_date < current_date or departure_date >= latest_date:
                     print('\nincorrect date! enter the flight information again.')
                     continue
             else:
