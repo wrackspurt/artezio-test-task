@@ -1,20 +1,20 @@
 """User information"""
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 import requests
 from lxml import html
+from requests.exceptions import ConnectionError
 
 URL = 'https://www.airblue.com/'
-PATH = '//*[@id="content"]/span[2]/select[1]/option'
+DESTINATIONS_PATH = '//*[@id="content"]/span[2]/select[1]/option'
 
 
 def get_destinations(url, path, key='directions'):
     """a method that is finding available destinations"""
     try:
         request = requests.get(url)
-    except ConnectionError as i:
-        print(i)
-        request = 'no response'
+    except ConnectionError:
+        print('something wrong with your connection')
         sys.exit()
     body = html.fromstring(request.text)
     destinations = {'directions': [], 'iata': []}
@@ -24,11 +24,27 @@ def get_destinations(url, path, key='directions'):
     return destinations[key]
 
 
-IATA_CODES = get_destinations(URL, PATH, 'iata')
-DESTINATIONS = get_destinations(URL, PATH)
+IATA_CODES = get_destinations(URL, DESTINATIONS_PATH, 'iata')
+DESTINATIONS = get_destinations(URL, DESTINATIONS_PATH)
 
 
-def user():
+def check_date(cdate, ddate, ldate, rdate):
+    """a method that is checking the date"""
+    result = ''
+    if ddate < cdate:
+        result += 'incorrect date! the departure date cannot be earlier than the current date.'
+    elif ddate >= ldate:
+        result += 'incorrect date! the departure date cannot be later than the last available date.'
+    elif rdate < cdate:
+        result += 'incorrect date! the return date cannot be earlier than the current date.'
+    elif rdate >= ldate:
+        result += 'incorrect date! the return date cannot be later than the last available date.'
+    elif ddate > rdate:
+        result += 'incorrect date! the return date cannot be earlier than the departure date.'
+    return result
+
+
+def get_user_options():
     """a method that is getting information from user"""
     print('hello! here are the destinations provided by', URL + ':')
     print(' - ' + '\n - '.join(DESTINATIONS))
@@ -49,24 +65,23 @@ def user():
                                                          '(dd-mm-yyyy): '), '%d-%m-%Y').date()
                 return_date = datetime.strptime(input('enter the date of return ' +
                                                       '(dd-mm-yyyy): '), '%d-%m-%Y').date()
-                if departure_date < current_date or departure_date >= latest_date or \
-                        return_date < current_date or return_date >= latest_date or \
-                        departure_date > return_date:
-                    print('\nincorrect date! enter the flight information again.')
+                check = check_date(current_date, departure_date, latest_date, return_date)
+                if check != '':
+                    print(check)
                     continue
             elif flight_type == 2:
                 departure_date = datetime.strptime(input('enter the date of departure ' +
                                                          '(dd-mm-yyyy): '), '%d-%m-%Y').date()
-                if departure_date < current_date or departure_date >= latest_date:
-                    print('\nincorrect date! enter the flight information again.')
+                return_date = departure_date + timedelta(days=2)
+                check = check_date(current_date, departure_date, latest_date, return_date)
+                if check != '':
+                    print(check)
                     continue
             else:
-                raise UnboundLocalError
+                print('incorrect value! you must enter 1 or 2.')
+                continue
         except ValueError:
             print('incorrect type of flight and/or date! try again.')
             continue
-        except UnboundLocalError:
-            print('you must enter only 1 or 2! try again.')
-            continue
         break
-    return iata_from, iata_to, str(departure_date), str(return_date)
+    return iata_from, iata_to, flight_type, str(departure_date), str(return_date)

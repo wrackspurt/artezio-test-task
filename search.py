@@ -33,48 +33,32 @@ def travel_deal(price, category):
     return result
 
 
-def get_discount_price(path):
-    """a method that is finding the discount price"""
-    price_dsc = path.xpath('.//td[@class="family family-ED family-group-Y "]/label/span/text()')
-    currency_dsc = path.xpath('.//td[@class="family family-ED family-group-Y "]/label/span' +
-                              '/b/text()')
-    result = travel_deal(''.join(price_dsc) + ' ' + ''.join(currency_dsc), 'discount')
-    return result
-
-
-def get_standard_price(path):
-    """a method that is finding the standard price"""
-    price_std = path.xpath('.//td[@class="family family-ES family-group-Y "]/label/span/text()')
-    currency_std = path.xpath('.//td[@class="family family-ES family-group-Y "]/label/span' +
-                              '/b/text()')
-    result = travel_deal(''.join(price_std) + ' ' + ''.join(currency_std), 'standard')
-    return result
-
-
-def get_premium_price(path):
-    """a method that is finding the premium price"""
-    price_prm = path.xpath('.//td[@class="family family-EP family-group-Y "]/label/span/text()')
-    currency_prm = path.xpath('.//td[@class="family family-ED family-group-Y "]/label/span' +
-                              '/b/text()')
-    result = travel_deal(''.join(price_prm) + ' ' + ''.join(currency_prm), 'premium')
+def get_price(path, letter, category):
+    """a method that is finding the price"""
+    price = path.xpath('.//td[@class="family family-E' + letter.upper() +
+                       ' family-group-Y "]/label/span/text()')
+    currency = path.xpath('.//td[@class="family family-E' + letter.upper() +
+                          ' family-group-Y "]/label/span' + '/b/text()')
+    result = travel_deal(''.join(price) + ' ' + ''.join(currency), category)
     return result
 
 
 def get_flight_info(path):
     """a method that is combining the flight information"""
     flight_info = []
-    for i in path:
-        depart = i.xpath('.//td[@class="time leaving"]/text()')
+    for p in path:
+        depart = p.xpath('.//td[@class="time leaving"]/text()')
         if depart:
-            arrive = get_arrive(i)[0]
+            arrive = get_arrive(p)[0]
             info = {'depart': depart[0], 'arrive': arrive,
                     'duration': get_duration(depart[0], arrive),
-                    'discount': get_discount_price(i),
-                    'standard': get_standard_price(i),
-                    'premium': get_premium_price(i)}
+                    'discount': get_price(p, 'd', 'discount'),
+                    'standard': get_price(p, 's', 'standard'),
+                    'premium': get_price(p, 'p', 'premium')}
             flight_info.append(info)
         else:
-            flight_info.append(str(i.xpath('.//td/text()')[0]).strip())
+            no_flights = str(p.xpath('.//td/text()')[0]).strip()
+            flight_info.append(no_flights)
     return flight_info
 
 
