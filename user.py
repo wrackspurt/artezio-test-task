@@ -1,6 +1,7 @@
 """User information"""
 import sys
 from datetime import datetime, timedelta
+
 import requests
 from lxml import html
 from requests.exceptions import ConnectionError
@@ -24,10 +25,6 @@ def get_destinations(url, path, key='directions'):
     return destinations[key]
 
 
-IATA_CODES = get_destinations(URL, DESTINATIONS_PATH, 'iata')
-DESTINATIONS = get_destinations(URL, DESTINATIONS_PATH)
-
-
 def check_date(cdate, ddate, ldate, rdate):
     """a method that is checking the date"""
     result = ''
@@ -46,19 +43,22 @@ def check_date(cdate, ddate, ldate, rdate):
 
 def get_user_options():
     """a method that is getting information from user"""
+
+    iata_codes = get_destinations(URL, DESTINATIONS_PATH, 'iata')
+    destinations = get_destinations(URL, DESTINATIONS_PATH)
+
     print('hello! here are the destinations provided by', URL + ':')
-    print(' - ' + '\n - '.join(DESTINATIONS))
+    print(' - ' + '\n - '.join(destinations))
     print('\nwhere would you like to go?')
     while True:
         iata_from = input('\nenter the IATA code of the initial airport: ').upper()
         iata_to = input('enter the IATA code of the ultimate airport: ').upper()
         try:
-            if iata_from not in IATA_CODES or iata_to not in IATA_CODES:
+            if iata_from not in iata_codes or iata_to not in iata_codes:
                 print('\nincorrect IATA! enter IATA codes again.')
                 continue
             current_date = datetime.now().date()
-            latest_date = datetime.strptime('28-10-2020', '%d-%m-%Y').date()
-            return_date = ''
+            latest_date = current_date + timedelta(days=183)
             flight_type = int(input('do you plan a round trip (1) or a one way (2)? (1/2): '))
             if flight_type == 1:
                 departure_date = datetime.strptime(input('enter the date of departure ' +

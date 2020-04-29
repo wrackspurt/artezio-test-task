@@ -1,36 +1,54 @@
 """Functions for searching"""
+import sys
 from datetime import datetime, timedelta
 
-
-def get_depart(path):
-    """a method that is finding the departure time"""
-    depart = path.xpath('.//td[@class="time leaving"]/text()')
-    return depart
+import requests
+from requests.exceptions import ConnectionError
 
 
-def get_arrive(path):
-    """a method that is finding the arrive time"""
-    arrive = path.xpath('.//td[@class="time landing"]/text()')
-    return arrive
+def get_url(code_from, code_to, dep_date, ret_date, trip_type='TT'):
+    """a method that calculates url"""
+    payload = [(trip_type, 'RT'), ('SS', ''), ('RT', ''), ('FL', 'on'), ('DC', code_from),
+               ('AC', code_to), ('AM', dep_date[0:7]), ('AD', dep_date[8:]),
+               ('DC', ''), ('AC', ''), ('AM', ''), ('AD', ''), ('DC', ''), ('AC', ''),
+               ('AM', ''), ('AD', ''), ('DC', ''), ('AC', ''), ('AM', ''), ('AD', ''),
+               ('RM', ret_date[0:7]), ('RD', ret_date[8:]), ('PA', '1'), ('PC', ''),
+               ('PI', ''), ('CC', ''), ('NS', ''), ('CD', '')]
+    if trip_type == 'OW':
+        payload.insert(0, ('TT', trip_type))
+    try:
+        response = requests.get('https://www.airblue.com/bookings/flight_selection.aspx',
+                                params=payload)
+        return response
+    except ConnectionError:
+        print('something wrong with your connection')
+        sys.exit()
+
+
+def get_time(path, date, kind='leaving'):
+    """a method that is finding the departure/arrive time"""
+    time_path = f'.//td[@class="time {kind}"]'
+    hours = path.xpath(f'{time_path}/text()')[0]
+    result = datetime.strptime(f'{date} {hours}', '%Y-%m-%d %I:%M %p')
+    for p in path.xpath(time_path):
+        plus_day = p.xpath('.//sup/text()')
+        if plus_day:
+            result = result + timedelta(days=1)
+    return result
 
 
 def get_duration(start, end):
     """a method that is calculating the duration"""
-    start_time = datetime.strptime(start[:-3], '%H:%M').time()
-    end_time = datetime.strptime(end[:-3], '%H:%M').time()
-    duration = timedelta(hours=end_time.hour, minutes=end_time.minute) -\
-               timedelta(hours=start_time.hour, minutes=start_time.minute)
+    duration = end - start
     return duration
 
 
 def travel_deal(price, category):
     """a method that is checking the availability of travel deal"""
-    result = ''
-    if price == ' ':
-        result += f'{category} travel deal is not available for the given flight.'
+    if price == '':
+        return f'{category} travel deal is not available for the given flight.'
     else:
-        result += price
-    return result
+        return price
 
 
 def get_price(path, letter, category):
@@ -39,19 +57,21 @@ def get_price(path, letter, category):
                        ' family-group-Y "]/label/span/text()')
     currency = path.xpath('.//td[@class="family family-E' + letter.upper() +
                           ' family-group-Y "]/label/span' + '/b/text()')
-    result = travel_deal(''.join(price) + ' ' + ''.join(currency), category)
-    return result
+    if len(price) == 0:
+        return travel_deal('', category)
+    else:
+        return travel_deal(f'{price[0]} {currency[0]}', category)
 
 
-def get_flight_info(path):
+def get_flight_info(path, dt):
     """a method that is combining the flight information"""
     flight_info = []
     for p in path:
-        depart = p.xpath('.//td[@class="time leaving"]/text()')
-        if depart:
-            arrive = get_arrive(p)[0]
-            info = {'depart': depart[0], 'arrive': arrive,
-                    'duration': get_duration(depart[0], arrive),
+        if p.xpath('.//td[@class="time leaving"]/text()'):
+            depart = get_time(p, dt)
+            arrive = get_time(p, dt, 'landing')
+            info = {'depart': depart, 'arrive': arrive,
+                    'duration': get_duration(depart, arrive),
                     'discount': get_price(p, 'd', 'discount'),
                     'standard': get_price(p, 's', 'standard'),
                     'premium': get_price(p, 'p', 'premium')}
