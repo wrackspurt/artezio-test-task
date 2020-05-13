@@ -6,7 +6,7 @@ import requests
 from requests.exceptions import ConnectionError
 
 
-def get_url(code_from, code_to, dep_date, ret_date, trip_type='TT'):
+def get_website_response(code_from, code_to, dep_date, ret_date, trip_type='TT'):
     """a method that calculates url"""
     payload = [(trip_type, 'RT'), ('SS', ''), ('RT', ''), ('FL', 'on'), ('DC', code_from),
                ('AC', code_to), ('AM', dep_date[0:7]), ('AD', dep_date[8:]),
@@ -43,14 +43,6 @@ def get_duration(start, end):
     return duration
 
 
-def travel_deal(price, category):
-    """a method that is checking the availability of travel deal"""
-    if price == '':
-        return f'{category} travel deal is not available for the given flight.'
-    else:
-        return price
-
-
 def get_price(path, letter, category):
     """a method that is finding the price"""
     price = path.xpath('.//td[@class="family family-E' + letter.upper() +
@@ -58,9 +50,9 @@ def get_price(path, letter, category):
     currency = path.xpath('.//td[@class="family family-E' + letter.upper() +
                           ' family-group-Y "]/label/span' + '/b/text()')
     if len(price) == 0:
-        return travel_deal('', category)
+        return f'{category} travel deal is not available for the given flight.'
     else:
-        return travel_deal(f'{price[0]} {currency[0]}', category)
+        return f'{price[0]} {currency[0]}'
 
 
 def get_flight_info(path, dt):

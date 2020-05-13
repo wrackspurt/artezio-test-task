@@ -58,7 +58,7 @@ def get_user_options():
                 print('\nincorrect IATA! enter IATA codes again.')
                 continue
             current_date = datetime.now().date()
-            latest_date = current_date + timedelta(days=183)
+            latest_date = current_date + timedelta(days=183)  # a half year consists of 365/2=182,5 ~ 183 days
             flight_type = int(input('do you plan a round trip (1) or a one way (2)? (1/2): '))
             if flight_type == 1:
                 departure_date = datetime.strptime(input('enter the date of departure ' +
