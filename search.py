@@ -9,11 +9,11 @@ from requests.exceptions import ConnectionError
 def get_website_response(code_from, code_to, dep_date, ret_date, trip_type='TT'):
     """a method that calculates url"""
     payload = [(trip_type, 'RT'), ('SS', ''), ('RT', ''), ('FL', 'on'), ('DC', code_from),
-               ('AC', code_to), ('AM', dep_date[0:7]), ('AD', dep_date[8:]),
+               ('AC', code_to), ('AM', dep_date.strftime('%Y-%m')), ('AD', dep_date.strftime('%d')),
                ('DC', ''), ('AC', ''), ('AM', ''), ('AD', ''), ('DC', ''), ('AC', ''),
                ('AM', ''), ('AD', ''), ('DC', ''), ('AC', ''), ('AM', ''), ('AD', ''),
-               ('RM', ret_date[0:7]), ('RD', ret_date[8:]), ('PA', '1'), ('PC', ''),
-               ('PI', ''), ('CC', ''), ('NS', ''), ('CD', '')]
+               ('RM', ret_date.strftime('%Y-%m')), ('RD', ret_date.strftime('%d')), ('PA', '1'),
+               ('PC', ''), ('PI', ''), ('CC', ''), ('NS', ''), ('CD', '')]
     if trip_type == 'OW':
         payload.insert(0, ('TT', trip_type))
     try:

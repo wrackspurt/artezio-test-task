@@ -1,5 +1,4 @@
 """Flight Selection"""
-from datetime import datetime
 
 from lxml import html
 
@@ -10,8 +9,8 @@ from search import get_flight_info, get_website_response, print_flight_info
 def find_flights():
     """a method that is providing information about flights"""
     iata_from, iata_to, flights_type, departure_date, return_date = get_user_options()
-    ddate = datetime.strptime(departure_date, "%Y-%m-%d").strftime("%Y_%m_%d")
-    rdate = datetime.strptime(return_date, "%Y-%m-%d").strftime("%Y_%m_%d")
+    ddate = departure_date.strftime("%Y_%m_%d")
+    rdate = return_date.strftime("%Y_%m_%d")
     print('\nsearch results: ')
     if flights_type == 1:  # corresponds to the round trip
         body = html.fromstring(get_website_response(iata_from, iata_to, departure_date,
